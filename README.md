@@ -64,6 +64,8 @@ Add additional notes about how to deploy this on a live system
 ## Authors
 
 * **Team Face Off** - *Initial work*
+Members: Caleb Graham, Robert Harp, Gabriel Schmitt, Margo Sikes, Nicolas Tomazinis
+
 
 ## License
 
