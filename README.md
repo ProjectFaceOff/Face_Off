@@ -1,5 +1,7 @@
 # Project DeepFake
 
+![Nicolas Cage being majestic](https://raw.githubusercontent.com/ProjectFaceOff/Face_Off/master/nickcage.png)
+
 One Paragraph of project description goes here
 
 ## Getting Started
