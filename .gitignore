@@ -1,5 +1,6 @@
 # Project specific
-Project_DeepFake/input/
+Project_DeepFake/input/deepfake-detection-challenge/*
+Project_DeepFake/input/haar-cascades-for-face-detection/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
