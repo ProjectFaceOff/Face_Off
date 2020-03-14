@@ -1,5 +1,5 @@
 # Project specific
-input/
+Project_DeepFake/input/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
