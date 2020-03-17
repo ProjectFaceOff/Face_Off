@@ -29,7 +29,7 @@ class Detector(Tk):
 
             self.frames[F] = frame
 
-            frame.grid(row=0, column=0)
+            frame.grid(row=0, column=0, sticky="nsew")
 
         self.show_frame(StartPage)
 
@@ -44,6 +44,7 @@ class StartPage(Frame):
 
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
+        
         lbl = Label(self, text="Deepfake Detector", font=("Arial Bold", 30))
         lbl.grid(column=2, row=0, ipadx=20)
 
@@ -101,11 +102,41 @@ class AlgPage(Frame):
 
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
-        lbl = Label(self, text="Choose your algorithms", font=("Arial Bold", 30))
-        lbl.grid(column=2, row=0, ipadx=20)
+        
+        lbl = Label(self, text="Algorithms", font=("Arial Bold", 30))
+        lbl.grid(column=2, row=0, ipadx=60)
 
         verNbr = Label(self, text="Version 0.0.0.0")
         verNbr.grid(column=3,row=3)
+
+        chk1_state = BooleanVar() #setting up checkbuttons
+
+        chk2_state = BooleanVar()
+
+        chk3_state = BooleanVar()
+
+        chk1_state.set(False) #defaulting the box to unchecked
+
+        chk2_state.set(False)
+
+        chk3_state.set(False)
+
+        chk1 = Checkbutton(self, text="Al Gore Rhythm 1", var=chk1_state) #giving the check boxes variables to reference and properties
+
+        chk2 = Checkbutton(self, text="Al Gore Rhythm 2", var=chk2_state)
+
+        chk3 = Checkbutton(self, text="Al Gore Rhythm 3", var=chk3_state)
+
+        chk1.grid(column=0, row=1, padx=10, pady=15)
+
+        chk2.grid(column=0, row=2, padx=10, pady=15)
+
+        chk3.grid(column=0, row=3, padx=10, pady=15)
+
+        logo = PhotoImage(file='SP_Mascot.png')
+        labelLogo = Label(self, image=logo)
+
+        labelLogo.grid(row=2, column=2)
 
 class ProgBarPage(Frame):
 
