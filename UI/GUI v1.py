@@ -1,10 +1,12 @@
 from tkinter import *
 from tkinter import filedialog
 from tkinter import messagebox
+from tkinter.ttk import Progressbar
+import tkinter.scrolledtext as tkst
 from os import path
 
 #This class handles basic layout and switching between frames. It breaks if you look at it wrong.
-class Detector(Tk):
+class GUI(Tk):
 
     def __init__(self,*args,**kwargs):
 
@@ -109,6 +111,13 @@ class AlgPage(Frame):
         verNbr = Label(self, text="Version 0.0.0.0")
         verNbr.grid(column=3,row=3)
 
+        def nextPage():
+
+            nxt = messagebox.askyesno("Run Program", "Are you ready to run the program?")
+
+            if nxt == True:
+                controller.show_frame(ProgBarPage)
+
         chk1_state = BooleanVar() #setting up checkbuttons
 
         chk2_state = BooleanVar()
@@ -133,12 +142,22 @@ class AlgPage(Frame):
 
         chk3.grid(column=0, row=3, padx=10, pady=15)
 
+        nxt = Button(self, text="Next", width=10, command=nextPage) #next button
+
+        nxt.grid(column=2, row=3)
+
+        #Creating the scrolling text box that lists files. On hold until i figure out how to make it a label
+##
+##        fileList = tkst.ScrolledText(self, bg="white", relief=GROOVE, height=16, width=14)
+##        fileList.grid(column=3, row=1, rowspan=3)
+
         logo = PhotoImage(file='SP_Mascot.png')
         labelLogo = Label(self, image=logo)
 
         labelLogo.grid(row=2, column=2)
 
-class ProgBarPage(Frame):
+class ProgBarPage(Frame): #This frame in particular may need to be split into a different folder since
+                          #otherwise the progress bar runs as soon as the program is launched
 
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
@@ -146,8 +165,19 @@ class ProgBarPage(Frame):
         lbl.grid(column=2, row=0, ipadx=20)
 
         verNbr = Label(self, text="Version 0.0.0.0")
-        verNbr.grid(column=3,row=3)
+        verNbr.grid(column=2,row=3)
 
+        #Creating progress bar
+        bar = Progressbar(self, length=200)
+
+        bar['value'] = 25
+
+        bar.grid(column=2,row=3,padx=200)
+     
+        logo = PhotoImage(file='SP_Mascot.png')
+        labelLogo = Label(self, image=logo)
+
+        labelLogo.grid(row=2, column=2)
 class ResultsPage(Frame):
 
     def __init__(self, parent, controller):
@@ -158,5 +188,5 @@ class ResultsPage(Frame):
         verNbr = Label(self, text="Version 0.0.0.0")
         verNbr.grid(column=3,row=3)
 
-app = Detector()
+app = GUI()
 app.mainloop()
