@@ -112,10 +112,10 @@ class AlgPage(Frame):
         verNbr.grid(column=3,row=3)
 
         def nextPage():
+            
+            npage = messagebox.askyesno("Run Program", "Are you ready to run the program?")
 
-            nxt = messagebox.askyesno("Run Program", "Are you ready to run the program?")
-
-            if nxt == True:
+            if npage == True:   
                 controller.show_frame(ProgBarPage)
 
         chk1_state = BooleanVar() #setting up checkbuttons
@@ -167,12 +167,27 @@ class ProgBarPage(Frame): #This frame in particular may need to be split into a 
         verNbr = Label(self, text="Version 0.0.0.0")
         verNbr.grid(column=2,row=3)
 
+        def nextPage():
+
+            controller.show_frame(ResultsPage)
+
         #Creating progress bar
         bar = Progressbar(self, length=200)
 
-        bar['value'] = 25
+        bar['value'] = 100
 
         bar.grid(column=2,row=3,padx=200)
+
+        nxt = Button(self, text="Next", width=10, height=2, pady=20, command=nextPage)
+   
+        if bar['value'] == 100:
+
+            nxt.grid(column=2,row=4)
+
+        else:
+
+            nxt.grid_remove()
+            print("Fail")
      
         logo = PhotoImage(file='SP_Mascot.png')
         labelLogo = Label(self, image=logo)
@@ -182,11 +197,27 @@ class ResultsPage(Frame):
 
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
-        lbl = Label(self, text="Deepfake Detector", font=("Arial Bold", 30))
+        lbl = Label(self, text="Results", font=("Arial Bold", 30))
         lbl.grid(column=2, row=0, ipadx=20)
 
         verNbr = Label(self, text="Version 0.0.0.0")
         verNbr.grid(column=3,row=3)
 
+        restart = Button(self, text="Restart", width=10)
+
+        export = Button(self, text="Export Results", width=10)
+
+        ext = Button(self, text="Exit", width=10)
+
+        restart.grid(row=3, column=1, padx=48)
+
+        export.grid(row=3, column=2, padx=75)
+
+        ext.grid(row=3, column=3, padx=60)
+        
+        logo = PhotoImage(file='SP_Mascot.png')
+        labelLogo = Label(self, image=logo)
+
+        labelLogo.grid(row=2, column=2)
 app = GUI()
 app.mainloop()
