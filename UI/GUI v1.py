@@ -13,6 +13,8 @@ class GUI(Tk):
         Tk.__init__(self, *args,**kwargs)
         container = Frame(self)
 
+        Tk.iconbitmap(self, default="SP_Icon.ico")
+
         self.title("FaceOff Deepfake Detector")
 
         container.pack(side="top", fill="both", expand=True)
@@ -96,6 +98,7 @@ class StartPage(Frame):
 
         #Placing our logo - not sure why it doesn't work
         logo = PhotoImage(file='SP_Mascot.png')
+        logo.image = logo
         labelLogo = Label(self, image=logo)
 
         labelLogo.grid(row=2, column=2)
@@ -152,6 +155,7 @@ class AlgPage(Frame):
 ##        fileList.grid(column=3, row=1, rowspan=3)
 
         logo = PhotoImage(file='SP_Mascot.png')
+        logo.image = logo
         labelLogo = Label(self, image=logo)
 
         labelLogo.grid(row=2, column=2)
@@ -190,6 +194,7 @@ class ProgBarPage(Frame): #This frame in particular may need to be split into a 
             print("Fail")
      
         logo = PhotoImage(file='SP_Mascot.png')
+        logo.image = logo
         labelLogo = Label(self, image=logo)
 
         labelLogo.grid(row=2, column=2)
@@ -216,6 +221,7 @@ class ResultsPage(Frame):
         ext.grid(row=3, column=3, padx=60)
         
         logo = PhotoImage(file='SP_Mascot.png')
+        logo.image = logo
         labelLogo = Label(self, image=logo)
 
         labelLogo.grid(row=2, column=2)
