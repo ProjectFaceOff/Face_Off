@@ -114,12 +114,19 @@ class AlgPage(Frame):
         verNbr = Label(self, text="Version 0.0.0.0")
         verNbr.grid(column=3,row=3)
 
-        def nextPage():
-            
-            npage = messagebox.askyesno("Run Program", "Are you ready to run the program?")
 
-            if npage == True:   
-                controller.show_frame(ProgBarPage)
+        def nextPage():
+
+            if chk1_state.get() == 1 or chk2_state.get() == 1 or chk3_state.get() == 1:
+
+                npage = messagebox.askyesno("Run Program","Are you ready to run the program?")
+
+                if npage == True:   
+                    controller.show_frame(ProgBarPage)
+                    
+            else: 
+
+                messagebox.showwarning("Must select algorithms","Please select one or more algorithms to continue")
 
         chk1_state = BooleanVar() #setting up checkbuttons
 
@@ -133,11 +140,11 @@ class AlgPage(Frame):
 
         chk3_state.set(False)
 
-        chk1 = Checkbutton(self, text="Al Gore Rhythm 1", var=chk1_state) #giving the check boxes variables to reference and properties
+        chk1 = Checkbutton(self, text="Algorithm 1      ", var=chk1_state) #giving the check boxes variables to reference and properties
 
-        chk2 = Checkbutton(self, text="Al Gore Rhythm 2", var=chk2_state)
+        chk2 = Checkbutton(self, text="Algorithm 2      ", var=chk2_state)
 
-        chk3 = Checkbutton(self, text="Al Gore Rhythm 3", var=chk3_state)
+        chk3 = Checkbutton(self, text="Algorithm 3      ", var=chk3_state)
 
         chk1.grid(column=0, row=1, padx=10, pady=15)
 
@@ -148,6 +155,7 @@ class AlgPage(Frame):
         nxt = Button(self, text="Next", width=10, command=nextPage) #next button
 
         nxt.grid(column=2, row=3)
+
 
         #Creating the scrolling text box that lists files. On hold until i figure out how to make it a label
 ##
