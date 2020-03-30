@@ -1,4 +1,5 @@
 from tkinter import *
+from tkinter import ttk
 from tkinter import filedialog
 from tkinter import messagebox
 from tkinter.ttk import Progressbar
@@ -83,11 +84,11 @@ class StartPage(Frame):
 
 
         #Buttons and their functions
-        btn = Button(self, text="Import Files",width =10, command=clickedFile)
+        btn = ttk.Button(self, text="Import Files",width =12, command=clickedFile)
 
-        btn1 = Button(self, text="Clear Log", width=10,command=clickedLog)
+        btn1 = ttk.Button(self, text="Clear Log", width=12,command=clickedLog)
 
-        btn2 = Button(self, text="Next", width=10, command = clickedNext)
+        btn2 = ttk.Button(self, text="Next", width=12, command = clickedNext)
 
         #Button layout
         btn.grid(column=0, row=1, padx=10, pady=15)
@@ -140,11 +141,11 @@ class AlgPage(Frame):
 
         chk3_state.set(False)
 
-        chk1 = Checkbutton(self, text="Algorithm 1      ", var=chk1_state) #giving the check boxes variables to reference and properties
+        chk1 = ttk.Checkbutton(self, text="Algorithm 1      ", var=chk1_state) #giving the check boxes variables to reference and properties
 
-        chk2 = Checkbutton(self, text="Algorithm 2      ", var=chk2_state)
+        chk2 = ttk.Checkbutton(self, text="Algorithm 2      ", var=chk2_state)
 
-        chk3 = Checkbutton(self, text="Algorithm 3      ", var=chk3_state)
+        chk3 = ttk.Checkbutton(self, text="Algorithm 3      ", var=chk3_state)
 
         chk1.grid(column=0, row=1, padx=10, pady=15)
 
@@ -152,7 +153,7 @@ class AlgPage(Frame):
 
         chk3.grid(column=0, row=3, padx=10, pady=15)
 
-        nxt = Button(self, text="Next", width=10, command=nextPage) #next button
+        nxt = ttk.Button(self, text="Next", width=10, command=nextPage) #next button
 
         nxt.grid(column=2, row=3)
 
@@ -190,7 +191,7 @@ class ProgBarPage(Frame): #This frame in particular may need to be split into a 
 
         bar.grid(column=2,row=3,padx=200)
 
-        nxt = Button(self, text="Next", width=10, height=2, pady=20, command=nextPage)
+        nxt = ttk.Button(self, text="Next", width=10, command=nextPage)
    
         if bar['value'] == 100:
 
@@ -216,22 +217,22 @@ class ResultsPage(Frame):
         verNbr = Label(self, text="Version 0.0.0.0")
         verNbr.grid(column=3,row=3)
 
-        restart = Button(self, text="Restart", width=10)
+        restart = ttk.Button(self, text="Restart", width=10)
 
-        export = Button(self, text="Export Results", width=10)
+        export = ttk.Button(self, text="Export Results", width=15)
 
-        ext = Button(self, text="Exit", width=10)
+        ext = ttk.Button(self, text="Exit", width=10)
 
-        restart.grid(row=3, column=1, padx=48)
+        restart.grid(row=2, column=1, padx=48, pady=35)
 
-        export.grid(row=3, column=2, padx=75)
+        export.grid(row=2, column=2, padx=75)
 
-        ext.grid(row=3, column=3, padx=60)
+        ext.grid(row=2, column=3, padx=60)
         
         logo = PhotoImage(file='SP_Mascot.png')
         logo.image = logo
         labelLogo = Label(self, image=logo)
 
-        labelLogo.grid(row=2, column=2)
+        labelLogo.grid(row=1, column=2, pady=15)
 app = GUI()
 app.mainloop()
