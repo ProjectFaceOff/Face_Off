@@ -6,7 +6,7 @@ from tkinter.ttk import Progressbar
 import tkinter.scrolledtext as tkst
 from os import path
 
-#This class handles basic layout and switching between frames. It breaks if you look at it wrong.
+#This class handles basic layout and switching between frames
 class GUI(Tk):
 
     def __init__(self,*args,**kwargs):
@@ -19,7 +19,6 @@ class GUI(Tk):
         self.title("FaceOff Deepfake Detector")
 
         container.pack(side="top", fill="both", expand=True)
-        #container.grid(row=0, column=0)
 
         self.geometry('595x330')
         self.minsize(595,330)
@@ -55,8 +54,6 @@ class StartPage(Frame):
 
         verNbr = Label(self, text="Version 0.0.0.0")
         verNbr.grid(column=3,row=3)
-
-#Above code should be copied for every subsequent page
 
         def clickedFile():
 
