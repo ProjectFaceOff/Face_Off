@@ -5,6 +5,10 @@ from tkinter import messagebox
 from tkinter.ttk import Progressbar
 import tkinter.scrolledtext as tkst
 from os import path
+import classifier
+
+files = []
+predictions = []
 
 #This class handles basic layout and switching between frames
 class GUI(Tk):
@@ -55,13 +59,10 @@ class StartPage(Frame):
         verNbr = Label(self, text="Version 0.0.0.0")
         verNbr.grid(column=3,row=3)
 
-        files = []
-
         def clickedFile():
 
             file = filedialog.askopenfilename(title="Import Files", filetype=(("MP4 Files","*.mp4"),))
             files.append(file)
-            print(files)
 
                                       
         def clickedLog():
@@ -125,6 +126,7 @@ class AlgPage(Frame):
 
                 if npage == True:   
                     controller.show_frame(ProgBarPage)
+                    predictions = classifier.classifier(files)
                     
             else: 
 
