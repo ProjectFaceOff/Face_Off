@@ -23,7 +23,6 @@ class GUI(Tk):
         self.title("FaceOff Deepfake Detector")
 
         container.pack(side="top", fill="both", expand=True)
-        #container.grid(row=0, column=0)
 
         self.geometry('595x330')
         self.minsize(595,330)
@@ -57,7 +56,7 @@ class StartPage(Frame):
         lbl = Label(self, text="Deepfake Detector", font=("Arial Bold", 30))
         lbl.grid(column=2, row=0, ipadx=20)
 
-        verNbr = Label(self, text="Version 0.0.0.0")
+        verNbr = Label(self, text="Version 1.0.0")
         verNbr.grid(column=3,row=3)
 
         def clickedFile():
@@ -100,7 +99,6 @@ class StartPage(Frame):
 
         btn2.grid(column=0, row=3, padx=10, pady=15)
 
-        #Placing our logo - not sure why it doesn't work
         logo = PhotoImage(file='SP_Mascot.png')
         logo.image = logo
         labelLogo = Label(self, image=logo)
@@ -115,7 +113,7 @@ class AlgPage(Frame):
         lbl = Label(self, text="Algorithms", font=("Arial Bold", 30))
         lbl.grid(column=2, row=0, ipadx=60)
 
-        verNbr = Label(self, text="Version 0.0.0.0")
+        verNbr = Label(self, text="Version 1.0.0")
         verNbr.grid(column=3,row=3)
 
 
@@ -173,7 +171,7 @@ class ProgBarPage(Frame):
         lbl = Label(self, text="Deepfake Detector", font=("Arial Bold", 30))
         lbl.grid(column=2, row=1, ipadx=20)
 
-        verNbr = Label(self, text="Version 0.0.0.0")
+        verNbr = Label(self, text="Version 1.0.0")
         verNbr.grid(column=3,row=4)
 
         def nextPage():
@@ -210,7 +208,7 @@ class ResultsPage(Frame):
         lbl = Label(self, text="Results", font=("Arial Bold", 30))
         lbl.grid(column=2, row=0, ipadx=20)
 
-        verNbr = Label(self, text="Version 0.0.0.0")
+        verNbr = Label(self, text="Version 1.0.0")
         verNbr.grid(column=3,row=3)
 
         def restartBtn():
