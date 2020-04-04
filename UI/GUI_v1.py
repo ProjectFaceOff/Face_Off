@@ -5,6 +5,11 @@ from tkinter import messagebox
 from tkinter.ttk import Progressbar
 from os import path
 
+import classifier
+
+files = []
+predictions = []
+
 #This class handles basic layout and switching between frames. It breaks if you look at it wrong.
 class GUI(Tk):
 
@@ -57,9 +62,11 @@ class StartPage(Frame):
 
         def clickedFile():
 
-            global files
-            files = filedialog.askopenfilenames(title="Import Files", filetype=(("MP4 Files","*.mp4"),))
-            print(files)
+            #global files
+            #files = filedialog.askopenfilenames(title="Import Files", filetype=(("MP4 Files","*.mp4"),))
+            #print(files)
+            file = filedialog.askopenfilename(title="Import Files", filetype=(("MP4 Files","*.mp4"),))
+            files.append(file)
                                       
         def clickedLog():
 
@@ -120,7 +127,7 @@ class AlgPage(Frame):
 
                 if npage == True:   
                     controller.show_frame(ProgBarPage)
-                    
+                    predictions = classifier.classifier(files)
             else: 
 
                 messagebox.showwarning("Must select algorithms","Please select one or more algorithms to continue")
