@@ -55,10 +55,14 @@ class StartPage(Frame):
         verNbr = Label(self, text="Version 0.0.0.0")
         verNbr.grid(column=3,row=3)
 
+        files = []
+
         def clickedFile():
 
             file = filedialog.askopenfilename(title="Import Files", filetype=(("MP4 Files","*.mp4"),))
-            print(file) #print for testing purposes, will return later
+            files.append(file)
+            print(files)
+
                                       
         def clickedLog():
 
