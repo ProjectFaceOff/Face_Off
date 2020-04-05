@@ -142,11 +142,11 @@ class AlgPage(Frame):
 
         chk3_state.set(False)
 
-        chk1 = ttk.Checkbutton(self, text="Algorithm 1      ", var=chk1_state) #giving the check boxes variables to reference and properties
+        chk1 = ttk.Radiobutton(self, text="Algorithm 1      ", var=chk1_state) #giving the check boxes variables to reference and properties
 
-        chk2 = ttk.Checkbutton(self, text="Algorithm 2      ", var=chk2_state)
+        chk2 = ttk.Radiobutton(self, text="Algorithm 2      ", var=chk2_state)
 
-        chk3 = ttk.Checkbutton(self, text="Algorithm 3      ", var=chk3_state)
+        chk3 = ttk.Radiobutton(self, text="Algorithm 3      ", var=chk3_state)
 
         chk1.grid(column=0, row=1, padx=10, pady=15)
 
