@@ -119,16 +119,33 @@ class AlgPage(Frame):
 
         def nextPage():
 
-            if chk1_state.get() == 1 or chk2_state.get() == 1 or chk3_state.get() == 1:
+#            if chk1_state.get() == 1 or chk2_state.get() == 1 or chk3_state.get() == 1:
+#
+#               npage = messagebox.askyesno("Run Program","Are you ready to run the program?")
+#
+#               if npage == True:   
+#                  controller.show_frame(ProgBarPage)
+#                   predictions = classifier.classifier(files)
+#           else: 
+#
+#               messagebox.showwarning("Must select algorithms","Please select one or more algorithms to continue")
 
-                npage = messagebox.askyesno("Run Program","Are you ready to run the program?")
-
+            if chk1_state.get() == 1:
+                npage = messagebox.askyesno("Run Program","Run program with Algorithm 1?")
                 if npage == True:   
                     controller.show_frame(ProgBarPage)
                     predictions = classifier.classifier(files)
+            elif chk2_state.get() == 1:
+                npage = messagebox.askyesno("Run Program","Run program with Algorithm 2?")
+                if npage == True:
+                    print("Two has been chosen but is not available yet")
+            elif chk3_state.get() == 1:
+                npage = messagebox.askyesno("Run Program","Run program with Algorithm 3?")
+                if npage == True:
+                    print("Three has been chosen but is not available yet")
             else: 
-
                 messagebox.showwarning("Must select algorithms","Please select one or more algorithms to continue")
+
 
         chk1_state = BooleanVar() #setting up checkbuttons
 
