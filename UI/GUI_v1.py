@@ -154,7 +154,7 @@ class AlgPage(Frame):
                 messagebox.showwarning("Must select an algorithm","Please select an algorithm to continue")
 
 
-         chk1_state = BooleanVar() #setting up checkbuttons
+        chk1_state = BooleanVar() #setting up checkbuttons
 
         chk2_state = BooleanVar()
 
