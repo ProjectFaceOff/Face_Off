@@ -116,19 +116,26 @@ class AlgPage(Frame):
         verNbr = Label(self, text="Version 1.0.0")
         verNbr.grid(column=3,row=3)
 
+        def c1hk():
+            chk1_state.set(True)
 
+            chk2_state.set(False)
+
+            chk3_state.set(False)
+        def c2hk():
+            chk1_state.set(False)
+
+            chk2_state.set(True)
+
+            chk3_state.set(False)
+        def c3hk():
+            chk1_state.set(False)
+
+            chk2_state.set(False)
+
+            chk3_state.set(True)
+        
         def nextPage():
-
-#            if chk1_state.get() == 1 or chk2_state.get() == 1 or chk3_state.get() == 1:
-#
-#               npage = messagebox.askyesno("Run Program","Are you ready to run the program?")
-#
-#               if npage == True:   
-#                  controller.show_frame(ProgBarPage)
-#                   predictions = classifier.classifier(files)
-#           else: 
-#
-#               messagebox.showwarning("Must select algorithms","Please select one or more algorithms to continue")
 
             if chk1_state.get() == 1:
                 npage = messagebox.askyesno("Run Program","Run program with Algorithm 1?")
@@ -144,26 +151,21 @@ class AlgPage(Frame):
                 if npage == True:
                     print("Three has been chosen but is not available yet")
             else: 
-                messagebox.showwarning("Must select algorithms","Please select one or more algorithms to continue")
+                messagebox.showwarning("Must select an algorithm","Please select an algorithm to continue")
 
 
-        chk1_state = BooleanVar() #setting up checkbuttons
+         chk1_state = BooleanVar() #setting up checkbuttons
 
         chk2_state = BooleanVar()
 
         chk3_state = BooleanVar()
 
-        chk1_state.set(False) #defaulting the box to unchecked
+        chk1 = ttk.Radiobutton(self, text="Algorithm 1      ",value=1, command = c1hk) #giving the check boxes variables to reference and properties
 
-        chk2_state.set(False)
+        chk2 = ttk.Radiobutton(self, text="Algorithm 2      ",value=2, command = c2hk)
 
-        chk3_state.set(False)
+        chk3 = ttk.Radiobutton(self, text="Algorithm 3      ",value=3, command = c3hk)
 
-        chk1 = ttk.Radiobutton(self, text="Algorithm 1      ", var=chk1_state) #giving the check boxes variables to reference and properties
-
-        chk2 = ttk.Radiobutton(self, text="Algorithm 2      ", var=chk2_state)
-
-        chk3 = ttk.Radiobutton(self, text="Algorithm 3      ", var=chk3_state)
 
         chk1.grid(column=0, row=1, padx=10, pady=15)
 
