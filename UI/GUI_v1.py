@@ -252,11 +252,11 @@ class ResultsPage(Frame):
 
         ext.grid(row=2, column=3, padx=60)
         
-        logo = PhotoImage(file='SP_Mascot.png')
-        logo.image = logo
-        labelLogo = Label(self, image=logo)
+        result = Label(self, text=("Files: ",files))
+        result2 = Label(self, text=("Predictions: ",predictions))
 
-        labelLogo.grid(row=1, column=2, pady=15)
+        result.grid(row=1, column=2, pady=15)
+        result2.grid(row=2, column=2, pady=15)
         
 app = GUI()
 app.mainloop()
