@@ -8,6 +8,7 @@ import torch.nn.functional as F
 import matplotlib.pyplot as plt
 import sys
 import warnings
+import re
 warnings.filterwarnings("ignore")
 
 # Store working directory and insert two helper modules into PATH variable.
@@ -18,8 +19,8 @@ sys.path.insert(0, current_path+"\\lib\\deepfakes-inference-demo")
 import blazeface
 
 def classifier(files):
-    # TODO: Will need to get list of imported videos from GUI as "files" variable.
     test_videos = sorted([x for x in files if x[-4:] == ".mp4"])
+    #print(test_videos)
 
 
 
@@ -113,17 +114,21 @@ def classifier(files):
 
     net = []
     model = FCN(model, 2048)
-    #model = model.cuda()
+    if (gpu == "gpu"):
+        model = model.cuda()
     model.load_state_dict(torch.load(current_path+'\\lib\\model.pth', map_location=torch.device(gpu)))
     net.append(model)
 
     def predict_on_video(video_path, batch_size):
         try:
+            facesList = []
             # Find the faces for N frames in the video.
             faces = face_extractor.process_video(video_path)
 
             # Only look at one face per frame.
             face_extractor.keep_only_best_face(faces)
+
+            #facesList = faces
             
             if len(faces) > 0:
                 # NOTE: When running on the CPU, the batch size must be fixed
@@ -132,11 +137,14 @@ def classifier(files):
 
                 # If we found any faces, prepare them for the model.
                 n = 0
+                frameNum = []
                 for frame_data in faces:
+                    frameNum.append(frame_data["frame_idx"])
                     for face in frame_data["faces"]:
                         # Resize to the model's required input size.
                         # We keep the aspect ratio intact and add zero
-                        # padding if necessary.                    
+                        # padding if necessary.
+                        facesList.append(face)                    
                         resized_face = isotropically_resize_image(face, input_size)
                         resized_face = make_square_image(resized_face)
 
@@ -165,12 +173,33 @@ def classifier(files):
                     with torch.no_grad():
                         y_pred = model(x)
                         y_pred = torch.sigmoid(y_pred.squeeze())
+                        highestThree = sorted(range(len(y_pred)), key=lambda i: y_pred[i])[-3:]
+                        #lowestThree = sorted(range(len(y_pred)), key=lambda i: y_pred[i])[:3]
+
+                        highestFrameNums = []
+                        for index in highestThree:
+                            highestFrameNums.append(frameNum[index])
+
+                        save_sus_frames(highestFrameNums, video_path)
+
                         return y_pred[:n].mean().item()
 
         except Exception as e:
             print("Prediction error on video %s: %s" % (video_path, str(e)))
 
         return 0.5
+
+    # Grabs the three most suspicious frames based on the y predictions and saves them
+    def save_sus_frames(highestFrameNums, video_path):
+        vid = cv2.VideoCapture(video_path)
+        video_name = os.path.basename(video_path)
+        video_name = os.path.splitext(video_name)[0]
+        highestFrameNums = sorted(highestFrameNums)
+        total_frames = vid.get(7)
+        for value in highestFrameNums:
+            vid.set(1, value)
+            ret, frame = vid.read()
+            cv2.imwrite('{0}_frame_{1}.jpg'.format(video_name,value), frame)
 
     from concurrent.futures import ThreadPoolExecutor
 
@@ -196,5 +225,5 @@ def classifier(files):
 
     model.eval()
     predictions = predict_on_video_set(test_videos, num_workers=4)
-    print(predictions)
+    #print(predictions)
     return predictions

@@ -8,7 +8,7 @@ from os import path
 import threading
 import queue
 
-import classifier
+import cnnClassifier
 
 files = []
 predictions = []
@@ -28,8 +28,8 @@ class GUI(Tk):
         container.pack(side="top", fill="both", expand=True)
 
         self.geometry('595x330')
-        #self.minsize(595,330)
-        #self.maxsize(595,330)
+        self.minsize(595,330)
+        self.maxsize(595,330)
         
         global files
         global cnnQue
@@ -41,7 +41,7 @@ class GUI(Tk):
         var2 = StringVar(value=predictions)
 
         cnnQue = queue.Queue()
-        cnnThread = threading.Thread(target=lambda q, arg1: q.put(classifier.classifier(arg1)), args=(cnnQue,files))
+        cnnThread = threading.Thread(target=lambda q, arg1: q.put(cnnClassifier.classifier(arg1)), args=(cnnQue,files))
 
         #Dictionary where all pages will go
         self.frames = {}
@@ -155,7 +155,6 @@ class AlgPage(Frame):
                 if npage == True:   
                     controller.show_frame(ProgBarPage)
                     cnnThread.start()
-                    #predictions = classifier.classifier(files)
             elif chk2_state.get() == 1:
                 npage = messagebox.askyesno("Run Program","Run program with Algorithm 2?")
                 if npage == True:
@@ -207,6 +206,9 @@ class ProgBarPage(Frame):
         verNbr = Label(self, text="Version 1.0.0")
         verNbr.grid(column=3,row=4)
         
+        loadingLbl = Label(self, text="Loading...", font=("Arial Bold", 20))
+        loadingLbl.grid(column=2,row=3,padx=200,pady=10)
+
         def nextPage():
             cnnThread.join()
             global predictions
@@ -216,19 +218,20 @@ class ProgBarPage(Frame):
             controller.show_frame(ResultsPage)
 
         #Creating progress bar
-        bar = Progressbar(self, length=200, mode="determinate")
-        bar.grid(column=2,row=3,padx=200,pady=10)
-        bar['value'] = 100
+        #bar = Progressbar(self, length=200, mode="determinate")
+        #bar.grid(column=2,row=3,padx=200,pady=10)
+        #bar['value'] = 100
         nxt = ttk.Button(self, text="Next", width=10, command=nextPage)
-   
-        if bar['value'] == 100:
-
-            nxt.grid(column=2,row=4, pady=10)
-
-        else:
-
-            nxt.grid_remove()
+   #
+        #if bar['value'] == 100:
+#
+        #    nxt.grid(column=2,row=4, pady=10)
+#
+        #else:
+#
+        #    nxt.grid_remove()
      
+        nxt.grid(column=2,row=4, pady=10)
         logo = PhotoImage(file='SP_Mascot.png')
         logo.image = logo
         labelLogo = Label(self, image=logo)
