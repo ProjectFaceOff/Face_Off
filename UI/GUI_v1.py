@@ -5,6 +5,9 @@ from tkinter import messagebox
 from tkinter.ttk import Progressbar
 from os import path
 
+import threading
+import queue
+
 import classifier
 
 files = []
@@ -27,10 +30,15 @@ class GUI(Tk):
         self.geometry('595x330')
         self.minsize(595,330)
         self.maxsize(595,330)
+        
+        global cnnQue
+        global cnnThread
+        cnnQue = queue.Queue()
+        cnnThread = threading.Thread(target=lambda q, arg1: q.put(classifier.classifier(arg1)), args=(cnnQue,files))
 
         #Dictionary where all pages will go
         self.frames = {}
-
+        
         for F in (StartPage, AlgPage, ProgBarPage, ResultsPage):
 
             frame = F(container, self)
@@ -42,7 +50,6 @@ class GUI(Tk):
         self.show_frame(StartPage)
 
     def show_frame(self, cont):
-
         frame = self.frames[cont]
         frame.tkraise()
 
@@ -134,7 +141,8 @@ class AlgPage(Frame):
                 npage = messagebox.askyesno("Run Program","Run program with Algorithm 1?")
                 if npage == True:   
                     controller.show_frame(ProgBarPage)
-                    predictions = classifier.classifier(files)
+                    cnnThread.start()
+                    #predictions = classifier.classifier(files)
             elif chk2_state.get() == 1:
                 npage = messagebox.askyesno("Run Program","Run program with Algorithm 2?")
                 if npage == True:
@@ -190,18 +198,14 @@ class ProgBarPage(Frame):
 
         verNbr = Label(self, text="Version 1.0.0")
         verNbr.grid(column=3,row=4)
-
+        
         def nextPage():
-
             controller.show_frame(ResultsPage)
 
         #Creating progress bar
-        bar = Progressbar(self, length=200)
-
-        bar['value'] = 100
-
+        bar = Progressbar(self, length=200, mode="indeterminate")
         bar.grid(column=2,row=3,padx=200,pady=10)
-
+        bar['value'] = 100
         nxt = ttk.Button(self, text="Next", width=10, command=nextPage)
    
         if bar['value'] == 100:
@@ -234,6 +238,9 @@ class ResultsPage(Frame):
                     controller.show_frame(AlgPage)
 
         def extBtn():
+            cnnThread.join()
+            predictions = cnnQue.get()
+            print(predictions)
             ext = messagebox.askyesno("Exit", "Are you sure you would like to exit the program?")
             if ext == True:
                 exit()
