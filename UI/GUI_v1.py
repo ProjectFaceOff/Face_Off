@@ -28,11 +28,18 @@ class GUI(Tk):
         container.pack(side="top", fill="both", expand=True)
 
         self.geometry('595x330')
-        self.minsize(595,330)
-        self.maxsize(595,330)
+        #self.minsize(595,330)
+        #self.maxsize(595,330)
         
+        global files
         global cnnQue
         global cnnThread
+
+        global var
+        global var2
+        var = StringVar(value=files)
+        var2 = StringVar(value=predictions)
+
         cnnQue = queue.Queue()
         cnnThread = threading.Thread(target=lambda q, arg1: q.put(classifier.classifier(arg1)), args=(cnnQue,files))
 
@@ -53,7 +60,6 @@ class GUI(Tk):
         frame = self.frames[cont]
         frame.tkraise()
 
-
 #The page users will see when they first start the program
 class StartPage(Frame):
 
@@ -68,11 +74,11 @@ class StartPage(Frame):
 
         def clickedFile():
 
-            #global files
-            #files = filedialog.askopenfilenames(title="Import Files", filetype=(("MP4 Files","*.mp4"),))
-            #print(files)
-            file = filedialog.askopenfilename(title="Import Files", filetype=(("MP4 Files","*.mp4"),))
-            files.append(file)
+            # Askopenfilenames returns something that is not in the correct format, so must append to list
+            filesUnformatted = filedialog.askopenfilenames(title="Import Files", filetype=(("MP4 Files","*.mp4"),))
+            for item in filesUnformatted:
+                files.append(item)
+            print(files)
                                       
         def clickedLog():
 
@@ -202,10 +208,15 @@ class ProgBarPage(Frame):
         verNbr.grid(column=3,row=4)
         
         def nextPage():
+            cnnThread.join()
+            global predictions
+            predictions = cnnQue.get()
+            var.set(files)
+            var2.set(predictions)
             controller.show_frame(ResultsPage)
 
         #Creating progress bar
-        bar = Progressbar(self, length=200, mode="indeterminate")
+        bar = Progressbar(self, length=200, mode="determinate")
         bar.grid(column=2,row=3,padx=200,pady=10)
         bar['value'] = 100
         nxt = ttk.Button(self, text="Next", width=10, command=nextPage)
@@ -240,9 +251,6 @@ class ResultsPage(Frame):
                     controller.show_frame(AlgPage)
 
         def extBtn():
-            cnnThread.join()
-            predictions = cnnQue.get()
-            print(predictions)
             ext = messagebox.askyesno("Exit", "Are you sure you would like to exit the program?")
             if ext == True:
                 exit()
@@ -259,8 +267,8 @@ class ResultsPage(Frame):
 
         ext.grid(row=2, column=3, padx=60)
         
-        result = Label(self, text=("Files: ",files))
-        result2 = Label(self, text=("Predictions: ",predictions))
+        result = Label(self, textvariable=(var))
+        result2 = Label(self, textvariable=(var2))
 
         result.grid(row=1, column=2, pady=15)
         result2.grid(row=2, column=2, pady=15)
