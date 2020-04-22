@@ -9,7 +9,23 @@ import matplotlib.pyplot as plt
 import sys
 import warnings
 import re
+from sklearn.model_selection import train_test_split
+import sklearn.metrics
 warnings.filterwarnings("ignore")
+from skimage import data
+from skimage.morphology import disk
+from skimage.filters import threshold_otsu, rank
+from skimage.util import img_as_ubyte
+from skimage import data
+from skimage import io
+import matplotlib
+import matplotlib.pyplot as plt
+from skimage.io import imread
+from skimage import data
+from skimage.transform import resize
+import pickle
+from sklearn.decomposition import PCA
+
 
 # Store working directory and insert two helper modules into PATH variable.
 current_path = os.getcwd()
@@ -40,12 +56,6 @@ def classifier(files):
 
     input_size = 150
 
-    from torchvision.transforms import Normalize
-
-    mean = [0.485, 0.456, 0.406]
-    std = [0.229, 0.224, 0.225]
-    normalize_transform = Normalize(mean, std)
-
     def isotropically_resize_image(img, size, resample=cv2.INTER_AREA):
         h, w = img.shape[:2]
         if w > h:
@@ -68,54 +78,6 @@ def classifier(files):
         r = size - w
         return cv2.copyMakeBorder(img, t, b, l, r, cv2.BORDER_CONSTANT, value=0)
 
-    from pytorchcv.model_provider import get_model
-    model = get_model("xception", pretrained=False)
-    model = nn.Sequential(*list(model.children())[:-1]) # Remove original output layer
-
-    model[0].final_block.pool = nn.Sequential(nn.AdaptiveAvgPool2d(1))
-
-    class Head(torch.nn.Module):
-        def __init__(self, in_f, out_f):
-            super(Head, self).__init__()
-            
-            self.f = nn.Flatten()
-            self.l = nn.Linear(in_f, 512)
-            self.d = nn.Dropout(0.5)
-            self.o = nn.Linear(512, out_f)
-            self.b1 = nn.BatchNorm1d(in_f)
-            self.b2 = nn.BatchNorm1d(512)
-            self.r = nn.ReLU()
-
-        def forward(self, x):
-            x = self.f(x)
-            x = self.b1(x)
-            x = self.d(x)
-
-            x = self.l(x)
-            x = self.r(x)
-            x = self.b2(x)
-            x = self.d(x)
-
-            out = self.o(x)
-            return out
-
-    class FCN(torch.nn.Module):
-        def __init__(self, base, in_f):
-            super(FCN, self).__init__()
-            self.base = base
-            self.h1 = Head(in_f, 1)
-        
-        def forward(self, x):
-            x = self.base(x)
-            return self.h1(x)
-
-    net = []
-    model = FCN(model, 2048)
-    if (gpu == "gpu"):
-        model = model.cuda()
-    model.load_state_dict(torch.load(current_path+'\\lib\\model.pth', map_location=torch.device(gpu)))
-    net.append(model)
-
     def predict_on_video(video_path, batch_size):
         try:
             facesList = []
@@ -125,7 +87,7 @@ def classifier(files):
             # Only look at one face per frame.
             face_extractor.keep_only_best_face(faces)
 
-            #facesList = faces
+            # facesList = faces
             
             if len(faces) > 0:
                 # NOTE: When running on the CPU, the batch size must be fixed
@@ -153,36 +115,39 @@ def classifier(files):
                         
                         # Test time augmentation: horizontal flips.
                         # TODO: not sure yet if this helps or not
-                        #x[n] = cv2.flip(resized_face, 1)
-                        #n += 1
+                        # x[n] = cv2.flip(resized_face, 1)
+                        # n += 1
 
-                if n > 0:
-                    x = torch.tensor(x, device=gpu).float()
+                magnitude_spectrum = []
+                x = x[:, :, :, 0]
 
-                    # Preprocess the images.
-                    x = x.permute((0, 3, 1, 2))
+                for img in x:
+                    img = resize(img,(72,72))
+                    f = (np.fft.fft2(img))
+                    fshift = np.fft.fftshift(f)
+                    magnitude_spectrum.append(20*np.log(np.abs(fshift)))
+                
+                magnitude_spectrum2 = np.asarray(magnitude_spectrum)
 
-                    for i in range(len(x)):
-                        x[i] = normalize_transform(x[i] / 255.)
-    #                     x[i] = x[i] / 255.
+                # Test for any NaNs or Infs
+                #print(np.any(np.isnan(magnitude_spectrum2)))
+                #print(np.all(np.isfinite(magnitude_spectrum2)))
 
-                    # Make a prediction, then take the average.
-                    with torch.no_grad():
-                        y_pred = model(x)
-                        y_pred = torch.sigmoid(y_pred.squeeze())
-                        highestThree = sorted(range(len(y_pred)), key=lambda i: y_pred[i])[-3:]
-                        #lowestThree = sorted(range(len(y_pred)), key=lambda i: y_pred[i])[:3]
+                magnitude_spectrum2 = magnitude_spectrum2.reshape(magnitude_spectrum2.shape[0],(magnitude_spectrum2.shape[1]*magnitude_spectrum2.shape[2]))
+                magnitude_spectrum2 = np.square(magnitude_spectrum2)
 
-                        highestFrameNums = []
-                        for index in highestThree:
-                            highestFrameNums.append(frameNum[index])
+                #magnitude_spectrum2 = np.nan_to_num(magnitude_spectrum2,posinf=5,neginf=0)
+                x2 = PCA(n_components=2).fit_transform(magnitude_spectrum2.tolist())
+                clf = pickle.load(open(current_path+"\\lib\\svmmodel.sav", 'rb'))
+                y_pred = clf.predict(x2)
 
-                        save_sus_frames(highestFrameNums, video_path)
-
-                        return y_pred[:n].mean().item()
+                print(y_pred[:n].mean().item())
+                return y_pred[:n].mean().item()
 
         except Exception as e:
-            print("Prediction error on video %s: %s" % (video_path, str(e)))
+            exc_type, exc_obj, tb = sys.exc_info()
+            lineno = tb.tb_lineno
+            print("Prediction error on video %s: %s %s" % (video_path, lineno, str(e)))
 
         return 0.5
 
@@ -220,7 +185,9 @@ def classifier(files):
         elapsed = time.time() - start_time
         print("Elapsed %f sec. Average per video: %f sec." % (elapsed, elapsed / len(speedtest_videos)))
 
-    model.eval()
+    #model.eval()
     predictions = predict_on_video_set(test_videos, num_workers=4)
+    # Import SVM
+
     #print(predictions)
     return predictions

@@ -9,6 +9,7 @@ import threading
 import queue
 
 import cnnClassifier
+import svmClassifier
 
 files = []
 predictions = []
@@ -34,6 +35,10 @@ class GUI(Tk):
         global files
         global cnnQue
         global cnnThread
+        global svmQue
+        global svmThread
+
+        global selectState
 
         global var
         global var2
@@ -42,6 +47,8 @@ class GUI(Tk):
 
         cnnQue = queue.Queue()
         cnnThread = threading.Thread(target=lambda q, arg1: q.put(cnnClassifier.classifier(arg1)), args=(cnnQue,files))
+        svmQue = queue.Queue()
+        svmThread = threading.Thread(target=lambda q, arg1: q.put(svmClassifier.classifier(arg1)), args=(svmQue,files))
 
         #Dictionary where all pages will go
         self.frames = {}
@@ -154,11 +161,14 @@ class AlgPage(Frame):
                 npage = messagebox.askyesno("Run Program","Run program with Algorithm 1?")
                 if npage == True:   
                     controller.show_frame(ProgBarPage)
+                    selectState = 0
                     cnnThread.start()
             elif chk2_state.get() == 1:
                 npage = messagebox.askyesno("Run Program","Run program with Algorithm 2?")
                 if npage == True:
-                    print("Two has been chosen but is not available yet")
+                    controller.show_frame(ProgBarPage)
+                    selectState = 0
+                    svmThread.start()
             elif chk3_state.get() == 1:
                 npage = messagebox.askyesno("Run Program","Run program with Algorithm 3?")
                 if npage == True:
@@ -210,12 +220,32 @@ class ProgBarPage(Frame):
         loadingLbl.grid(column=2,row=3,padx=200,pady=10)
 
         def nextPage():
-            cnnThread.join()
+            svmThread.join()
             global predictions
-            predictions = cnnQue.get()
+            predictions = svmQue.get()
+            #cnnThread.join()
+            #global predictions
+            #predictions = cnnQue.get()
+            results = convertResults(predictions)
             var.set(files)
-            var2.set(predictions)
+            var2.set(results)
             controller.show_frame(ResultsPage)
+        
+        def convertResults(predictions):
+            results = []
+            for prediction in predictions:
+                if prediction < 0.2:
+                    results.append("Likely real")
+                elif prediction >= 0.2 and prediction < 0.5:
+                    results.append("Probably real")
+                elif prediction == 0.5:
+                    results.append("Not sure")
+                elif prediction > 0.5 and prediction < 0.8:
+                    results.append("Probably fake")
+                else:
+                    results.append("Likely fake")
+            return results
+
 
         #Creating progress bar
         #bar = Progressbar(self, length=200, mode="determinate")
