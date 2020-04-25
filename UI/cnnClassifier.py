@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import sys
 import warnings
 import re
+from datetime import datetime
 warnings.filterwarnings("ignore")
 
 # Store working directory and insert two helper modules into PATH variable.
@@ -19,6 +20,7 @@ sys.path.insert(0, current_path+"\\lib\\deepfakes-inference-demo")
 import blazeface
 
 def classifier(files):
+    f = open("deepfakeLog.log", "a+")
     test_videos = sorted([x for x in files if x[-4:] == ".mp4"])
 
     # Check for whether GPU is available.
@@ -164,7 +166,7 @@ def classifier(files):
 
                     for i in range(len(x)):
                         x[i] = normalize_transform(x[i] / 255.)
-    #                     x[i] = x[i] / 255.
+                        # x[i] = x[i] / 255.
 
                     # Make a prediction, then take the average.
                     with torch.no_grad():
@@ -177,12 +179,18 @@ def classifier(files):
                         for index in highestThree:
                             highestFrameNums.append(frameNum[index])
 
+                        time = datetime.now()
+                        f.write(time.strftime("%d/%m/%Y %H:%M:%S") + " -- Entered {0} into CNN algorithm\n".format(video_path))
+                        f.write("\tPrediction: " + str(y_pred[:n].mean().item()) + "\n\n")
                         save_sus_frames(highestFrameNums, video_path)
-
                         return y_pred[:n].mean().item()
 
         except Exception as e:
-            print("Prediction error on video %s: %s" % (video_path, str(e)))
+            exc_type, exc_obj, tb = sys.exc_info()
+            lineno = tb.tb_lineno
+            time = datetime.now()
+            log.write("\n%s -- Prediction error on video %s: %s\n" % (time.strftime("%d/%m/%Y %H:%M:%S"), video_path, str(e)))
+            print("Prediction error on video %s: %s %s" % (video_path, lineno, str(e)))
 
         return 0.5
 
@@ -193,10 +201,14 @@ def classifier(files):
         video_name = os.path.splitext(video_name)[0]
         highestFrameNums = sorted(highestFrameNums)
         total_frames = vid.get(7)
+        cd = os.getcwd()
+        if not os.path.isdir(video_name):
+            os.mkdir('{0}'.format(video_name))
         for value in highestFrameNums:
             vid.set(1, value)
             ret, frame = vid.read()
-            cv2.imwrite('{0}_frame_{1}.jpg'.format(video_name,value), frame)
+            print('{0}/{1}/{1}_frame_{2}.jpg'.format(cd,video_name,value))
+            cv2.imwrite('{0}/{1}/{1}_frame_{2}.jpg'.format(cd,video_name,value), frame)
 
     from concurrent.futures import ThreadPoolExecutor
 
@@ -222,5 +234,5 @@ def classifier(files):
 
     model.eval()
     predictions = predict_on_video_set(test_videos, num_workers=4)
-    #print(predictions)
+    f.close()
     return predictions

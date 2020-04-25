@@ -29,8 +29,8 @@ class GUI(Tk):
         container.pack(side="top", fill="both", expand=True)
 
         self.geometry('595x330')
-        self.minsize(595,330)
-        self.maxsize(595,330)
+        #self.minsize(595,330)
+        #self.maxsize(595,330)
         
         global files
         global cnnQue
@@ -157,6 +157,7 @@ class AlgPage(Frame):
         
         def nextPage():
 
+            global selectState
             if chk1_state.get() == 1:
                 npage = messagebox.askyesno("Run Program","Run program with Algorithm 1?")
                 if npage == True:   
@@ -167,7 +168,7 @@ class AlgPage(Frame):
                 npage = messagebox.askyesno("Run Program","Run program with Algorithm 2?")
                 if npage == True:
                     controller.show_frame(ProgBarPage)
-                    selectState = 0
+                    selectState = 1
                     svmThread.start()
             elif chk3_state.get() == 1:
                 npage = messagebox.askyesno("Run Program","Run program with Algorithm 3?")
@@ -183,18 +184,18 @@ class AlgPage(Frame):
 
         chk3_state = BooleanVar()
 
-        chk1 = ttk.Radiobutton(self, text="Algorithm 1      ",value=1, command = c1hk) #giving the check boxes variables to reference and properties
+        chk1 = ttk.Radiobutton(self, text="Convolutional Neural Network      ",value=1, command = c1hk) #giving the check boxes variables to reference and properties
 
-        chk2 = ttk.Radiobutton(self, text="Algorithm 2      ",value=2, command = c2hk)
+        chk2 = ttk.Radiobutton(self, text="Support Vector Machine            ",value=2, command = c2hk)
 
-        chk3 = ttk.Radiobutton(self, text="Algorithm 3      ",value=3, command = c3hk)
+        #chk3 = ttk.Radiobutton(self, text="Algorithm 3      ",value=3, command = c3hk)
 
 
         chk1.grid(column=0, row=1, padx=10, pady=15)
 
         chk2.grid(column=0, row=2, padx=10, pady=15)
 
-        chk3.grid(column=0, row=3, padx=10, pady=15)
+        #chk3.grid(column=0, row=3, padx=10, pady=15)
 
         nxt = ttk.Button(self, text="Next", width=10, command=nextPage) #next button
 
@@ -220,12 +221,15 @@ class ProgBarPage(Frame):
         loadingLbl.grid(column=2,row=3,padx=200,pady=10)
 
         def nextPage():
-            svmThread.join()
+            
             global predictions
-            predictions = svmQue.get()
-            #cnnThread.join()
-            #global predictions
-            #predictions = cnnQue.get()
+            global selectState
+            if selectState == 0:
+                cnnThread.join()
+                predictions = cnnQue.get()
+            if selectState == 1:
+                svmThread.join()
+                predictions = svmQue.get()
             results = convertResults(predictions)
             var.set(files)
             var2.set(results)
@@ -235,32 +239,19 @@ class ProgBarPage(Frame):
             results = []
             for prediction in predictions:
                 if prediction < 0.2:
-                    results.append("Likely real")
+                    results.append("Likely real: {0:.2f}".format(prediction))
                 elif prediction >= 0.2 and prediction < 0.5:
-                    results.append("Probably real")
+                    results.append("Probably real: {0:.2f}".format(prediction))
                 elif prediction == 0.5:
-                    results.append("Not sure")
+                    results.append("Not sure: {0:.2f}".format(prediction))
                 elif prediction > 0.5 and prediction < 0.8:
-                    results.append("Probably fake")
+                    results.append("Probably fake: {0:.2f}".format(prediction))
                 else:
-                    results.append("Likely fake")
+                    results.append("Likely fake: {0:.2f}".format(prediction))
             return results
 
-
-        #Creating progress bar
-        #bar = Progressbar(self, length=200, mode="determinate")
-        #bar.grid(column=2,row=3,padx=200,pady=10)
-        #bar['value'] = 100
         nxt = ttk.Button(self, text="Next", width=10, command=nextPage)
-   #
-        #if bar['value'] == 100:
-#
-        #    nxt.grid(column=2,row=4, pady=10)
-#
-        #else:
-#
-        #    nxt.grid_remove()
-     
+
         nxt.grid(column=2,row=4, pady=10)
         logo = PhotoImage(file='SP_Mascot.png')
         logo.image = logo

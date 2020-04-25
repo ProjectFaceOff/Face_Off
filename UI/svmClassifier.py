@@ -25,6 +25,7 @@ from skimage import data
 from skimage.transform import resize
 import pickle
 from sklearn.decomposition import PCA
+from datetime import datetime
 
 
 # Store working directory and insert two helper modules into PATH variable.
@@ -35,6 +36,7 @@ sys.path.insert(0, current_path+"\\lib\\deepfakes-inference-demo")
 import blazeface
 
 def classifier(files):
+    log = open("deepfakeLog.log", "a+")
     test_videos = sorted([x for x in files if x[-4:] == ".mp4"])
 
     # Check for whether GPU is available.
@@ -118,12 +120,12 @@ def classifier(files):
                         # x[n] = cv2.flip(resized_face, 1)
                         # n += 1
 
-                magnitude_spectrum = []
                 x = x[:, :, :, 0]
+                magnitude_spectrum = []
 
                 for img in x:
                     img = resize(img,(72,72))
-                    f = (np.fft.fft2(img))
+                    f = (np.fft.rfft2(img))
                     fshift = np.fft.fftshift(f)
                     magnitude_spectrum.append(20*np.log(np.abs(fshift)))
                 
@@ -140,6 +142,10 @@ def classifier(files):
                 x2 = PCA(n_components=2).fit_transform(magnitude_spectrum2.tolist())
                 clf = pickle.load(open(current_path+"\\lib\\svmmodel.sav", 'rb'))
                 y_pred = clf.predict(x2)
+                video_name = os.path.basename(video_path)
+                time = datetime.now()
+                log.write(time.strftime("%d/%m/%Y %H:%M:%S") + " -- Entered {0} into SVM algorithm\n".format(video_name))
+                log.write("\tPrediction: " + str(y_pred[:n].mean().item()) + "\n\n")
 
                 print(y_pred[:n].mean().item())
                 return y_pred[:n].mean().item()
@@ -147,6 +153,8 @@ def classifier(files):
         except Exception as e:
             exc_type, exc_obj, tb = sys.exc_info()
             lineno = tb.tb_lineno
+            time = datetime.now()
+            log.write("\n%s -- Prediction error on video %s: %s\n" % (time.strftime("%d/%m/%Y %H:%M:%S"), video_path, str(e)))
             print("Prediction error on video %s: %s %s" % (video_path, lineno, str(e)))
 
         return 0.5
@@ -190,4 +198,5 @@ def classifier(files):
     # Import SVM
 
     #print(predictions)
+    log.close()
     return predictions
