@@ -4,6 +4,7 @@ from tkinter import filedialog
 from tkinter import messagebox
 from tkinter.ttk import Progressbar
 from os import path
+import itertools
 
 import threading
 import queue
@@ -13,6 +14,7 @@ import svmClassifier
 
 files = []
 predictions = []
+res = []
 
 #This class handles basic layout and switching between frames. It breaks if you look at it wrong.
 class GUI(Tk):
@@ -42,8 +44,10 @@ class GUI(Tk):
 
         global var
         global var2
+        global var3
         var = StringVar(value=files)
         var2 = StringVar(value=predictions)
+        var3 = StringVar(value=res)
 
         cnnQue = queue.Queue()
         cnnThread = threading.Thread(target=lambda q, arg1: q.put(cnnClassifier.classifier(arg1)), args=(cnnQue,files))
@@ -131,7 +135,7 @@ class AlgPage(Frame):
         Frame.__init__(self, parent)
         
         lbl = Label(self, text="Algorithms", font=("Arial Bold", 30))
-        lbl.grid(column=2, row=0, ipadx=60)
+        lbl.grid(column=2, row=0, ipadx=50)
 
         verNbr = Label(self, text="Version 1.0.0")
         verNbr.grid(column=3,row=3)
@@ -141,39 +145,28 @@ class AlgPage(Frame):
 
             chk2_state.set(False)
 
-            chk3_state.set(False)
         def c2hk():
             chk1_state.set(False)
 
             chk2_state.set(True)
 
-            chk3_state.set(False)
-        def c3hk():
-            chk1_state.set(False)
 
-            chk2_state.set(False)
-
-            chk3_state.set(True)
         
         def nextPage():
 
             global selectState
             if chk1_state.get() == 1:
-                npage = messagebox.askyesno("Run Program","Run program with Algorithm 1?")
+                npage = messagebox.askyesno("Run Program","Run program with the Convolutional Neural Network?")
                 if npage == True:   
                     controller.show_frame(ProgBarPage)
                     selectState = 0
                     cnnThread.start()
             elif chk2_state.get() == 1:
-                npage = messagebox.askyesno("Run Program","Run program with Algorithm 2?")
+                npage = messagebox.askyesno("Run Program","Run program with the Support Vector Machine?")
                 if npage == True:
                     controller.show_frame(ProgBarPage)
                     selectState = 1
                     svmThread.start()
-            elif chk3_state.get() == 1:
-                npage = messagebox.askyesno("Run Program","Run program with Algorithm 3?")
-                if npage == True:
-                    print("Three has been chosen but is not available yet")
             else: 
                 messagebox.showwarning("Must select an algorithm","Please select an algorithm to continue")
 
@@ -184,25 +177,22 @@ class AlgPage(Frame):
 
         chk3_state = BooleanVar()
 
-        chk1 = ttk.Radiobutton(self, text="Convolutional Neural Network      ",value=1, command = c1hk) #giving the check boxes variables to reference and properties
+        chk1 = ttk.Radiobutton(self, text="Conv. Neural Network  ",value=1, command = c1hk) #giving the check boxes variables to reference and properties
 
-        chk2 = ttk.Radiobutton(self, text="Support Vector Machine            ",value=2, command = c2hk)
-
-        #chk3 = ttk.Radiobutton(self, text="Algorithm 3      ",value=3, command = c3hk)
+        chk2 = ttk.Radiobutton(self, text="Support Vector Machine",value=2, command = c2hk)
 
 
-        chk1.grid(column=0, row=1, padx=10, pady=15)
+        chk1.grid(column=0, row=1, padx=0, pady=30, columnspan=2)
 
-        chk2.grid(column=0, row=2, padx=10, pady=15)
-
-        #chk3.grid(column=0, row=3, padx=10, pady=15)
+        chk2.grid(column=0, row=2, padx=0, pady=15, columnspan=2)
+        
 
         nxt = ttk.Button(self, text="Next", width=10, command=nextPage) #next button
 
         nxt.grid(column=2, row=3)
 
         logo = PhotoImage(file='SP_Mascot.png')
-        logo.image = logo
+##        logo.image = logo
         labelLogo = Label(self, image=logo)
 
         labelLogo.grid(row=2, column=2)
@@ -212,13 +202,13 @@ class ProgBarPage(Frame):
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
         lbl = Label(self, text="Deepfake Detector", font=("Arial Bold", 30))
-        lbl.grid(column=2, row=1, ipadx=20)
+        lbl.grid(column=2, row=1)
 
         verNbr = Label(self, text="Version 1.0.0")
-        verNbr.grid(column=3,row=4)
+        verNbr.grid(column=2,row=5, padx=(500,1))
         
         loadingLbl = Label(self, text="Loading...", font=("Arial Bold", 20))
-        loadingLbl.grid(column=2,row=3,padx=200,pady=10)
+        loadingLbl.grid(column=1,row=3,pady=10,columnspan=2)
 
         def nextPage():
             
@@ -234,6 +224,34 @@ class ProgBarPage(Frame):
             var.set(files)
             var2.set(results)
             controller.show_frame(ResultsPage)
+
+            x = []
+            y = []
+            a = ""
+            for i in files:
+                for l in reversed(i):
+                    if l != "/":
+                        a += l
+
+                    elif l == "/":
+                        b=''.join(reversed(a))
+                        x.append(b)
+                        y.append(x)
+                        x = []
+                        a = ""
+                        break
+
+            def listToStringWithoutBrackets(list1):
+                return str(list1).replace('[','').replace(']','')
+            result = list(itertools.chain.from_iterable(zip(y,results)))
+            res = listToStringWithoutBrackets(result)
+                    
+####            combinedResults = []
+####            for i in range(len(y)):
+####                combinedResults.append(y[i]+':'+results[i])
+####            res = combinedResults
+            
+            var3.set(res)
         
         def convertResults(predictions):
             results = []
@@ -252,12 +270,11 @@ class ProgBarPage(Frame):
 
         nxt = ttk.Button(self, text="Next", width=10, command=nextPage)
 
-        nxt.grid(column=2,row=4, pady=10)
+        nxt.grid(column=2,row=4, padx=250)
         logo = PhotoImage(file='SP_Mascot.png')
-        logo.image = logo
         labelLogo = Label(self, image=logo)
 
-        labelLogo.grid(row=2, column=2, pady=8)
+        labelLogo.grid(row=2, column=2)
         
 class ResultsPage(Frame):
 
@@ -291,11 +308,11 @@ class ResultsPage(Frame):
 
         ext.grid(row=2, column=3, padx=60)
         
-        result = Label(self, textvariable=(var))
-        result2 = Label(self, textvariable=(var2))
+        result = Label(self, textvariable=(var3))
+##        result2 = Label(self, textvariable=(var2))
 
         result.grid(row=1, column=2, pady=15)
-        result2.grid(row=2, column=2, pady=15)
+##        result2.grid(row=2, column=2, pady=15)
         
 app = GUI()
 app.mainloop()
