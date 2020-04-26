@@ -5,6 +5,7 @@ from tkinter import messagebox
 from tkinter.ttk import Progressbar
 from os import path
 import itertools
+import os
 
 import threading
 import queue
@@ -44,10 +45,8 @@ class GUI(Tk):
 
         global var
         global var2
-        global var3
         var = StringVar(value=files)
-        var2 = StringVar(value=predictions)
-        var3 = StringVar(value=res)
+        var2 = StringVar(value=res)
 
         cnnQue = queue.Queue()
         cnnThread = threading.Thread(target=lambda q, arg1: q.put(cnnClassifier.classifier(arg1)), args=(cnnQue,files))
@@ -221,51 +220,31 @@ class ProgBarPage(Frame):
                 svmThread.join()
                 predictions = svmQue.get()
             results = convertResults(predictions)
+            combinedResults = []
+            video_name = ""
+            for i in range(len(files)):
+                video_name = os.path.splitext(os.path.basename(files[i]))[0]
+                combinedResults.append(video_name+': '+results[i])
+            res = ""
+            for item in combinedResults:
+                res = res + item
             var.set(files)
-            var2.set(results)
+            var2.set(res)
             controller.show_frame(ResultsPage)
-
-            x = []
-            y = []
-            a = ""
-            for i in files:
-                for l in reversed(i):
-                    if l != "/":
-                        a += l
-
-                    elif l == "/":
-                        b=''.join(reversed(a))
-                        x.append(b)
-                        y.append(x)
-                        x = []
-                        a = ""
-                        break
-
-            def listToStringWithoutBrackets(list1):
-                return str(list1).replace('[','').replace(']','')
-            result = list(itertools.chain.from_iterable(zip(y,results)))
-            res = listToStringWithoutBrackets(result)
-                    
-####            combinedResults = []
-####            for i in range(len(y)):
-####                combinedResults.append(y[i]+':'+results[i])
-####            res = combinedResults
-            
-            var3.set(res)
         
         def convertResults(predictions):
             results = []
             for prediction in predictions:
                 if prediction < 0.2:
-                    results.append("Likely real: {0:.2f}".format(prediction))
+                    results.append("Likely real ({0:.2f})\n".format(prediction))
                 elif prediction >= 0.2 and prediction < 0.5:
-                    results.append("Probably real: {0:.2f}".format(prediction))
+                    results.append("Probably real ({0:.2f})\n".format(prediction))
                 elif prediction == 0.5:
-                    results.append("Not sure: {0:.2f}".format(prediction))
+                    results.append("Not sure ({0:.2f})\n".format(prediction))
                 elif prediction > 0.5 and prediction < 0.8:
-                    results.append("Probably fake: {0:.2f}".format(prediction))
+                    results.append("Probably fake ({0:.2f})\n".format(prediction))
                 else:
-                    results.append("Likely fake: {0:.2f}".format(prediction))
+                    results.append("Likely fake: ({0:.2f})\n".format(prediction))
             return results
 
         nxt = ttk.Button(self, text="Next", width=10, command=nextPage)
@@ -308,11 +287,9 @@ class ResultsPage(Frame):
 
         ext.grid(row=2, column=3, padx=60)
         
-        result = Label(self, textvariable=(var3))
-##        result2 = Label(self, textvariable=(var2))
+        result = Label(self, textvariable=(var2))
 
         result.grid(row=1, column=2, pady=15)
-##        result2.grid(row=2, column=2, pady=15)
         
 app = GUI()
 app.mainloop()
