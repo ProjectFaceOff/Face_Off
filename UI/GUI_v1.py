@@ -1,3 +1,7 @@
+#FaceOff Deepfake Detector GUI
+#Lead Developer: Gabriel Schmitt
+#Contributions by: Margo Sikes, Caleb Graham
+
 from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
@@ -17,7 +21,7 @@ files = []
 predictions = []
 res = []
 
-#This class handles basic layout and switching between frames. It breaks if you look at it wrong.
+#This class handles basic layout and switching between frames
 class GUI(Tk):
 
     def __init__(self,*args,**kwargs):
@@ -25,16 +29,19 @@ class GUI(Tk):
         Tk.__init__(self, *args,**kwargs)
         container = Frame(self)
 
+        #Program icon to appear in the upper left of the window
         Tk.iconbitmap(self, default="SP_Icon.ico")
 
         self.title("FaceOff Deepfake Detector")
 
+        #Packing container the frames go into
         container.pack(side="top", fill="both", expand=True)
 
         self.geometry('595x330')
         #self.minsize(595,330)
         #self.maxsize(595,330)
         
+        #Section contributed by Margo Sikes
         global files
         global cnnQue
         global cnnThread
@@ -66,6 +73,7 @@ class GUI(Tk):
 
         self.show_frame(StartPage)
 
+    #Raises the next frame on top of the current one
     def show_frame(self, cont):
         frame = self.frames[cont]
         frame.tkraise()
@@ -98,7 +106,6 @@ class StartPage(Frame):
                 print("Log Cleared")
             if clr == False:
                 print("Log Not Cleared")
-            #print for testing purposes. will attach to functions that clear a specific folder later
 
         def clickedNext():
             
@@ -108,14 +115,14 @@ class StartPage(Frame):
             if nxt == False:
                 controller.show_frame(StartPage)
                 
-        #Buttons and their functions
+        #Buttons and their commands
         btn = ttk.Button(self, text="Import Files",width=12, command=clickedFile)
 
         btn1 = ttk.Button(self, text="Clear Log", width=12,command=clickedLog)
 
         btn2 = ttk.Button(self, text="Next", width=12, command=clickedNext)
 
-        #Button layout
+        #Placing buttons
         btn.grid(column=0, row=1, padx=10, pady=15)
 
         btn1.grid(column=0, row=2, padx=10, pady=15)
@@ -148,8 +155,6 @@ class AlgPage(Frame):
             chk1_state.set(False)
 
             chk2_state.set(True)
-
-
         
         def nextPage():
 
@@ -169,18 +174,18 @@ class AlgPage(Frame):
             else: 
                 messagebox.showwarning("Must select an algorithm","Please select an algorithm to continue")
 
+        #Setting up radio buttons
 
-        chk1_state = BooleanVar() #setting up checkbuttons
-
+        chk1_state = BooleanVar() 
         chk2_state = BooleanVar()
-
-        chk3_state = BooleanVar()
-
-        chk1 = ttk.Radiobutton(self, text="Conv. Neural Network  ",value=1, command = c1hk) #giving the check boxes variables to reference and properties
+        
+        #Giving the radio buttons variables to reference and properties
+        
+        chk1 = ttk.Radiobutton(self, text="Conv. Neural Network  ",value=1, command = c1hk) 
 
         chk2 = ttk.Radiobutton(self, text="Support Vector Machine",value=2, command = c2hk)
 
-
+        #Placing radio buttons
         chk1.grid(column=0, row=1, padx=0, pady=30, columnspan=2)
 
         chk2.grid(column=0, row=2, padx=0, pady=15, columnspan=2)
@@ -190,12 +195,13 @@ class AlgPage(Frame):
 
         nxt.grid(column=2, row=3)
 
+        #This will provide appropriate spacing without the image appearing
         logo = PhotoImage(file='SP_Mascot.png')
-##        logo.image = logo
         labelLogo = Label(self, image=logo)
 
         labelLogo.grid(row=2, column=2)
 
+#The page users will see while the program processes the video
 class ProgBarPage(Frame):
 
     def __init__(self, parent, controller):
@@ -209,8 +215,8 @@ class ProgBarPage(Frame):
         loadingLbl = Label(self, text="Loading...", font=("Arial Bold", 20))
         loadingLbl.grid(column=1,row=3,pady=10,columnspan=2)
 
+        #Section contributed by Margo Sikes
         def nextPage():
-            
             global predictions
             global selectState
             if selectState == 0:
@@ -232,6 +238,7 @@ class ProgBarPage(Frame):
             var2.set(res)
             controller.show_frame(ResultsPage)
         
+        #Section contributed by Margo Sikes
         def convertResults(predictions):
             results = []
             for prediction in predictions:
@@ -270,6 +277,7 @@ class ResultsPage(Frame):
             if res == True:
                     controller.show_frame(AlgPage)
 
+        #Contributed by Caleb Graham
         def extBtn():
             ext = messagebox.askyesno("Exit", "Are you sure you would like to exit the program?")
             if ext == True:
