@@ -42,6 +42,7 @@ class GUI(Tk):
         #self.maxsize(595,330)
         
         #Section contributed by Margo Sikes
+        ##Initialize global variables so that information can be passed between frames
         global files
         global cnnQue
         global cnnThread
@@ -55,9 +56,11 @@ class GUI(Tk):
         var = StringVar(value=files)
         var2 = StringVar(value=res)
 
+        ##Initialize queue for SVM and CNN to enqueue tasks
         cnnQue = queue.Queue()
-        cnnThread = threading.Thread(target=lambda q, arg1: q.put(cnnClassifier.classifier(arg1)), args=(cnnQue,files))
         svmQue = queue.Queue()
+        ##Create threads for SVM and CNN that will be initialized upon selecting each algorithm
+        cnnThread = threading.Thread(target=lambda q, arg1: q.put(cnnClassifier.classifier(arg1)), args=(cnnQue,files))
         svmThread = threading.Thread(target=lambda q, arg1: q.put(svmClassifier.classifier(arg1)), args=(svmQue,files))
 
         #Dictionary where all pages will go
@@ -163,12 +166,16 @@ class AlgPage(Frame):
                 npage = messagebox.askyesno("Run Program","Run program with the Convolutional Neural Network?")
                 if npage == True:   
                     controller.show_frame(ProgBarPage)
+                    #Section contributed by Margo Sikes
+                    ##Sets state to 0 for CNN and begins CNN process
                     selectState = 0
                     cnnThread.start()
             elif chk2_state.get() == 1:
                 npage = messagebox.askyesno("Run Program","Run program with the Support Vector Machine?")
                 if npage == True:
                     controller.show_frame(ProgBarPage)
+                    #Section contributed by Margo Sikes
+                    ##Sets state to 0 for CNN and begins SVM process
                     selectState = 1
                     svmThread.start()
             else: 
@@ -216,24 +223,31 @@ class ProgBarPage(Frame):
         loadingLbl.grid(column=1,row=3,pady=10,columnspan=2)
 
         #Section contributed by Margo Sikes
+        ##Upon hitting next page...
         def nextPage():
+            ##Access global variables to determine whether algorithm 1 or 2 was selected
             global predictions
             global selectState
             if selectState == 0:
+                ##If CNN selected, wait here until CNN has completed running then get the predictions
                 cnnThread.join()
                 predictions = cnnQue.get()
             if selectState == 1:
+                ##If SVM selected, wait here until CNN has completed running then get the predictions
                 svmThread.join()
                 predictions = svmQue.get()
+            ##Convert results into a new format to show Likely real, etc.
             results = convertResults(predictions)
             combinedResults = []
             video_name = ""
+            ##Append filename to list
             for i in range(len(files)):
                 video_name = os.path.splitext(os.path.basename(files[i]))[0]
                 combinedResults.append(video_name+': '+results[i])
             res = ""
             for item in combinedResults:
                 res = res + item
+            ##Set string variables so that the Results Page will correctly show updated values
             var.set(files)
             var2.set(res)
             controller.show_frame(ResultsPage)
@@ -241,6 +255,7 @@ class ProgBarPage(Frame):
         #Section contributed by Margo Sikes
         def convertResults(predictions):
             results = []
+            ##Rename predictions based on their outputs
             for prediction in predictions:
                 if prediction < 0.2:
                     results.append("Likely real ({0:.2f})\n".format(prediction))

@@ -1,3 +1,10 @@
+#FaceOff Deepfake Detector CNN Classifier Using Inference
+#Lead Developer: Margo Sikes
+
+#Based on code provided by user GreatGameDota @ Kaggle.com
+#Adapted to Python for usage in GUI with our trained model
+#Original notebook: https://www.kaggle.com/greatgamedota/xception-binary-classifier-inference
+
 import os, sys, time
 import cv2
 import numpy as np
@@ -17,15 +24,20 @@ current_path = os.getcwd()
 sys.path.insert(0, current_path+"\\lib\\blazeface-pytorch")
 sys.path.insert(0, current_path+"\\lib\\deepfakes-inference-demo")
 
+# Import blazeface from above
 import blazeface
 
+# Define classifier for CNN with filenames as input
 def classifier(files):
+    # Open log file and begin to append
     f = open("deepfakeLog.log", "a+")
+    # Sort videos
     test_videos = sorted([x for x in files if x[-4:] == ".mp4"])
 
     # Check for whether GPU is available.
     gpu = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+    # Set up face detection
     facedet = blazeface.BlazeFace().to(gpu)
     facedet.load_weights(current_path+"\\lib\\blazeface-pytorch\\blazeface.pth")
     facedet.load_anchors(current_path+"\\lib\\blazeface-pytorch\\anchors.npy")
@@ -34,20 +46,24 @@ def classifier(files):
     from helpers.read_video_1 import VideoReader
     from helpers.face_extract_1 import FaceExtractor
 
+    # Determine how many frames are analyzed per video
     frames_per_video = 20
-
+    # Read in frames 
     video_reader = VideoReader()
     video_read_fn = lambda x: video_reader.read_frames(x, num_frames=frames_per_video)
     face_extractor = FaceExtractor(video_read_fn, facedet)
 
+    # Size of images
     input_size = 150
 
     from torchvision.transforms import Normalize
 
+    # Mean/std deviation values from original code
     mean = [0.485, 0.456, 0.406]
     std = [0.229, 0.224, 0.225]
     normalize_transform = Normalize(mean, std)
 
+    # Resize image
     def isotropically_resize_image(img, size, resample=cv2.INTER_AREA):
         h, w = img.shape[:2]
         if w > h:
@@ -60,7 +76,7 @@ def classifier(files):
         resized = cv2.resize(img, (w, h), interpolation=resample)
         return resized
 
-
+    # Turn image into correct size
     def make_square_image(img):
         h, w = img.shape[:2]
         size = max(h, w)
@@ -70,12 +86,13 @@ def classifier(files):
         r = size - w
         return cv2.copyMakeBorder(img, t, b, l, r, cv2.BORDER_CONSTANT, value=0)
 
+    # Setup to grab model
     from pytorchcv.model_provider import get_model
     model = get_model("xception", pretrained=False)
     model = nn.Sequential(*list(model.children())[:-1]) # Remove original output layer
-
     model[0].final_block.pool = nn.Sequential(nn.AdaptiveAvgPool2d(1))
 
+    # Define model
     class Head(torch.nn.Module):
         def __init__(self, in_f, out_f):
             super(Head, self).__init__()
@@ -101,6 +118,7 @@ def classifier(files):
             out = self.o(x)
             return out
 
+    # Define fully conv network
     class FCN(torch.nn.Module):
         def __init__(self, base, in_f):
             super(FCN, self).__init__()
@@ -115,9 +133,11 @@ def classifier(files):
     model = FCN(model, 2048)
     if (gpu == "gpu"):
         model = model.cuda()
+    # Load trained model
     model.load_state_dict(torch.load(current_path+'\\lib\\model.pth', map_location=torch.device(gpu)))
     net.append(model)
 
+    # Prediction
     def predict_on_video(video_path, batch_size):
         try:
             facesList = []
@@ -172,38 +192,48 @@ def classifier(files):
                     with torch.no_grad():
                         y_pred = model(x)
                         y_pred = torch.sigmoid(y_pred.squeeze())
+                        # Store highest three predictions in list
                         highestThree = sorted(range(len(y_pred)), key=lambda i: y_pred[i])[-3:]
                         #lowestThree = sorted(range(len(y_pred)), key=lambda i: y_pred[i])[:3]
 
                         highestFrameNums = []
+                        # Save frame numbers of highest 3 predictions
                         for index in highestThree:
                             highestFrameNums.append(frameNum[index])
 
+                        # Log to file that prediction was created
                         time = datetime.now()
                         f.write(time.strftime("%d/%m/%Y %H:%M:%S") + " -- Entered {0} into CNN algorithm\n".format(video_path))
                         f.write("\tPrediction: " + str(y_pred[:n].mean().item()) + "\n\n")
+                        # Use the list of frame numbers to save suspicious images
                         save_sus_frames(highestFrameNums, video_path)
+                        # Return single prediction mean from prediction on each frame
                         return y_pred[:n].mean().item()
 
+        # Error handling
         except Exception as e:
             exc_type, exc_obj, tb = sys.exc_info()
             lineno = tb.tb_lineno
             time = datetime.now()
             log.write("\n%s -- Prediction error on video %s: %s\n" % (time.strftime("%d/%m/%Y %H:%M:%S"), video_path, str(e)))
             print("Prediction error on video %s: %s %s" % (video_path, lineno, str(e)))
-
+        # Return 0.5 if error (0.5 == Not Sure)
         return 0.5
 
     # Grabs the three most suspicious frames based on the y predictions and saves them
     def save_sus_frames(highestFrameNums, video_path):
+        # Create a video capture instance
         vid = cv2.VideoCapture(video_path)
         video_name = os.path.basename(video_path)
         video_name = os.path.splitext(video_name)[0]
+        # Sort highest frame num list
         highestFrameNums = sorted(highestFrameNums)
         total_frames = vid.get(7)
         cd = os.getcwd()
+        # Make directory for video
         if not os.path.isdir(video_name):
             os.mkdir('{0}'.format(video_name))
+        # Set video to correct frame and save image frame
         for value in highestFrameNums:
             vid.set(1, value)
             ret, frame = vid.read()
@@ -212,6 +242,7 @@ def classifier(files):
 
     from concurrent.futures import ThreadPoolExecutor
 
+    # Predict on multiple videos
     def predict_on_video_set(videos, num_workers):
         def process_file(i):
             filename = videos[i]
@@ -223,6 +254,8 @@ def classifier(files):
 
         return list(predictions)
 
+    # If True, will return a prediction of classification length
+    # Ultimately was not able to use this in GUI due to threading difficulty
     speed_test = False
 
     if speed_test:

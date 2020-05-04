@@ -1,3 +1,11 @@
+#FaceOff Deepfake Detector SVM Classifier
+#Lead Developer: Margo Sikes
+#Contributions by: Robert Harp
+
+#Partially based on code provided by user GreatGameDota @ Kaggle.com
+#Adapted to Python for usage in GUI with SVM
+#Original notebook: https://www.kaggle.com/greatgamedota/xception-binary-classifier-inference
+
 import os, sys, time
 import cv2
 import numpy as np
@@ -27,21 +35,25 @@ import pickle
 from sklearn.decomposition import PCA
 from datetime import datetime
 
-
 # Store working directory and insert two helper modules into PATH variable.
 current_path = os.getcwd()
 sys.path.insert(0, current_path+"\\lib\\blazeface-pytorch")
 sys.path.insert(0, current_path+"\\lib\\deepfakes-inference-demo")
 
+# Import blazeface from above
 import blazeface
 
+# Define classifier for CNN with filenames as input
 def classifier(files):
+    # Open log file and begin to append
     log = open("deepfakeLog.log", "a+")
+    # Sort videos
     test_videos = sorted([x for x in files if x[-4:] == ".mp4"])
 
     # Check for whether GPU is available.
     gpu = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+    # Set up face detection
     facedet = blazeface.BlazeFace().to(gpu)
     facedet.load_weights(current_path+"\\lib\\blazeface-pytorch\\blazeface.pth")
     facedet.load_anchors(current_path+"\\lib\\blazeface-pytorch\\anchors.npy")
@@ -49,15 +61,17 @@ def classifier(files):
 
     from helpers.read_video_1 import VideoReader
     from helpers.face_extract_1 import FaceExtractor
-
+    # Determine how many frames are analyzed per video
     frames_per_video = 20
-
+    # Set up video reader and face extractor helpers
     video_reader = VideoReader()
     video_read_fn = lambda x: video_reader.read_frames(x, num_frames=frames_per_video)
     face_extractor = FaceExtractor(video_read_fn, facedet)
 
+    # Size of images
     input_size = 150
 
+    # Resize image
     def isotropically_resize_image(img, size, resample=cv2.INTER_AREA):
         h, w = img.shape[:2]
         if w > h:
@@ -70,7 +84,7 @@ def classifier(files):
         resized = cv2.resize(img, (w, h), interpolation=resample)
         return resized
 
-
+    # Turn image into correct size
     def make_square_image(img):
         h, w = img.shape[:2]
         size = max(h, w)
@@ -80,6 +94,7 @@ def classifier(files):
         r = size - w
         return cv2.copyMakeBorder(img, t, b, l, r, cv2.BORDER_CONSTANT, value=0)
 
+    # Prediction
     def predict_on_video(video_path, batch_size):
         try:
             facesList = []
@@ -119,63 +134,55 @@ def classifier(files):
                         # TODO: not sure yet if this helps or not
                         # x[n] = cv2.flip(resized_face, 1)
                         # n += 1
-
+                
+                # Contributed by Robert Harp (137-158)
+                # Remove alpha dimension from array
                 x = x[:, :, :, 0]
                 magnitude_spectrum = []
-
+                ## Create magnitude spectrum
                 for img in x:
                     img = resize(img,(72,72))
                     f = (np.fft.rfft2(img))
                     fshift = np.fft.fftshift(f)
                     magnitude_spectrum.append(20*np.log(np.abs(fshift)))
-                
+                ## Convert magnitude spectrum to np array
                 magnitude_spectrum2 = np.asarray(magnitude_spectrum)
-
-                # Test for any NaNs or Infs
-                #print(np.any(np.isnan(magnitude_spectrum2)))
-                #print(np.all(np.isfinite(magnitude_spectrum2)))
-
+                ## Reshape array
                 magnitude_spectrum2 = magnitude_spectrum2.reshape(magnitude_spectrum2.shape[0],(magnitude_spectrum2.shape[1]*magnitude_spectrum2.shape[2]))
+                ## Square array
                 magnitude_spectrum2 = np.square(magnitude_spectrum2)
-
-                #magnitude_spectrum2 = np.nan_to_num(magnitude_spectrum2,posinf=5,neginf=0)
+                ## Pass into PCA
                 x2 = PCA(n_components=2).fit_transform(magnitude_spectrum2.tolist())
+                ## Load pickled model
                 clf = pickle.load(open(current_path+"\\lib\\svmmodel.sav", 'rb'))
+                ## Predict on x2 values and output predctions
                 y_pred = clf.predict(x2)
+
+                # Log prediction with name
                 video_name = os.path.basename(video_path)
                 time = datetime.now()
                 log.write(time.strftime("%d/%m/%Y %H:%M:%S") + " -- Entered {0} into SVM algorithm\n".format(video_name))
                 log.write("\tPrediction: " + str(y_pred[:n].mean().item()) + "\n\n")
 
+                # Print and return prediction
                 print(y_pred[:n].mean().item())
                 return y_pred[:n].mean().item()
 
+        # Error handling
         except Exception as e:
             exc_type, exc_obj, tb = sys.exc_info()
             lineno = tb.tb_lineno
             time = datetime.now()
-            log.write("\n%s -- Prediction error on video %s: %s\n" % (time.strftime("%d/%m/%Y %H:%M:%S"), video_path, str(e)))
+            log.write("\n%s -- Prediction error on video %s: %s\n\n" % (time.strftime("%d/%m/%Y %H:%M:%S"), video_path, str(e)))
             print("Prediction error on video %s: %s %s" % (video_path, lineno, str(e)))
-
+        # Return 0.5 if error (0.5 == Not Sure)
         return 0.5
-
-    # Grabs the three most suspicious frames based on the y predictions and saves them
-    def save_sus_frames(highestFrameNums, video_path):
-        vid = cv2.VideoCapture(video_path)
-        video_name = os.path.basename(video_path)
-        video_name = os.path.splitext(video_name)[0]
-        highestFrameNums = sorted(highestFrameNums)
-        total_frames = vid.get(7)
-        for value in highestFrameNums:
-            vid.set(1, value)
-            ret, frame = vid.read()
-            cv2.imwrite('{0}_frame_{1}.jpg'.format(video_name,value), frame)
 
     from concurrent.futures import ThreadPoolExecutor
 
+    # Predict on multiple videos
     def predict_on_video_set(videos, num_workers):
         def process_file(i):
-            filename = videos[i]
             y_pred = predict_on_video(filename, batch_size=frames_per_video)
             return y_pred
 
@@ -184,6 +191,8 @@ def classifier(files):
 
         return list(predictions)
 
+    # If True, will return a prediction of classification length
+    # Ultimately was not able to use this in GUI due to threading difficulty
     speed_test = False
 
     if speed_test:
@@ -193,10 +202,6 @@ def classifier(files):
         elapsed = time.time() - start_time
         print("Elapsed %f sec. Average per video: %f sec." % (elapsed, elapsed / len(speedtest_videos)))
 
-    #model.eval()
     predictions = predict_on_video_set(test_videos, num_workers=4)
-    # Import SVM
-
-    #print(predictions)
     log.close()
     return predictions
